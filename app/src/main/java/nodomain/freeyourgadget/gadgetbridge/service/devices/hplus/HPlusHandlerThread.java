@@ -52,8 +52,6 @@ class HPlusHandlerThread extends GBDeviceIoThread {
     private int DAY_SUMMARY_SYNC_PERIOD = 24 * 60 * 60;
     private int DAY_SUMMARY_SYNC_RETRY_PERIOD = 30;
 
-    private int HELLO_INTERVAL = 60;
-
     private boolean mQuit = false;
     private HPlusSupport mHPlusSupport;
 
@@ -61,7 +59,6 @@ class HPlusHandlerThread extends GBDeviceIoThread {
     private int mLastSlotRequested = 0;
 
     private Calendar mLastSleepDayReceived = GregorianCalendar.getInstance();
-    private Calendar mHelloTime = GregorianCalendar.getInstance();
     private Calendar mGetDaySlotsTime = GregorianCalendar.getInstance();
     private Calendar mGetSleepTime = GregorianCalendar.getInstance();
     private Calendar mGetDaySummaryTime = GregorianCalendar.getInstance();
@@ -113,10 +110,6 @@ class HPlusHandlerThread extends GBDeviceIoThread {
 
             Calendar now = GregorianCalendar.getInstance();
 
-            if (now.compareTo(mHelloTime) > 0) {
-                sendHello();
-            }
-
             if (now.compareTo(mGetDaySlotsTime) > 0) {
                 requestNextDaySlots();
             }
@@ -130,7 +123,7 @@ class HPlusHandlerThread extends GBDeviceIoThread {
             }
 
             now = GregorianCalendar.getInstance();
-            waitTime = Math.min(mGetDaySummaryTime.getTimeInMillis(), Math.min(Math.min(mGetDaySlotsTime.getTimeInMillis(), mGetSleepTime.getTimeInMillis()), mHelloTime.getTimeInMillis())) - now.getTimeInMillis();
+            waitTime = Math.min(mGetDaySummaryTime.getTimeInMillis(), Math.min(mGetDaySlotsTime.getTimeInMillis(), mGetSleepTime.getTimeInMillis())) - now.getTimeInMillis();
         }
 
     }
@@ -169,35 +162,10 @@ class HPlusHandlerThread extends GBDeviceIoThread {
         builder.write(mHPlusSupport.ctrlCharacteristic, new byte[]{HPlusConstants.CMD_GET_CURR_DATA});
 
         builder.queue(mHPlusSupport.getQueue());
-        scheduleHello();
 
         synchronized (waitObject) {
             waitObject.notify();
         }
-    }
-
-    /**
-     * Send an Hello/Null Packet to keep connection
-     */
-    private void sendHello() {
-        TransactionBuilder builder = new TransactionBuilder("hello");
-
-        builder.write(mHPlusSupport.ctrlCharacteristic, HPlusConstants.CMD_ACTION_HELLO);
-        builder.queue(mHPlusSupport.getQueue());
-
-        scheduleHello();
-
-        synchronized (waitObject) {
-            waitObject.notify();
-        }
-    }
-
-    /**
-     * Schedule an Hello Packet in the future
-     */
-    public void scheduleHello(){
-        mHelloTime = GregorianCalendar.getInstance();
-        mHelloTime.add(Calendar.SECOND, HELLO_INTERVAL);
     }
 
     /**
