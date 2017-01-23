@@ -98,6 +98,7 @@ public class DeviceSupportFactory {
                         deviceSupport = new ServiceDeviceSupport(new LiveviewSupport(), EnumSet.of(ServiceDeviceSupport.Flags.BUSY_CHECKING));
                         break;
                     case HPLUS:
+                    case MAKIBESF68:
                         deviceSupport = new ServiceDeviceSupport(new HPlusSupport(), EnumSet.of(ServiceDeviceSupport.Flags.BUSY_CHECKING));
                         break;
                 }
