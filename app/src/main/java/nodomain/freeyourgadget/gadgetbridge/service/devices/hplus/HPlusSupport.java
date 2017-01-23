@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import nodomain.freeyourgadget.gadgetbridge.devices.hplus.HPlusConstants;
 import nodomain.freeyourgadget.gadgetbridge.devices.hplus.HPlusCoordinator;
+import nodomain.freeyourgadget.gadgetbridge.entities.Device;
 import nodomain.freeyourgadget.gadgetbridge.impl.GBDevice;
 import nodomain.freeyourgadget.gadgetbridge.model.Alarm;
 import nodomain.freeyourgadget.gadgetbridge.model.CalendarEventSpec;
@@ -51,6 +52,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
     public BluetoothGattCharacteristic measureCharacteristic = null;
 
     private HPlusHandlerThread syncHelper;
+    private DeviceType deviceType = DeviceType.UNKNOWN;
 
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
@@ -62,8 +64,11 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
         }
     };
 
-    public HPlusSupport() {
+    public HPlusSupport(DeviceType type) {
         super(LOG);
+
+        deviceType = type;
+
         addSupportedService(GattService.UUID_SERVICE_GENERIC_ACCESS);
         addSupportedService(GattService.UUID_SERVICE_GENERIC_ATTRIBUTE);
         addSupportedService(HPlusConstants.UUID_SERVICE_HP);
@@ -72,7 +77,6 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
         IntentFilter intentFilter = new IntentFilter();
 
         broadcastManager.registerReceiver(mReceiver, intentFilter);
-
     }
 
     @Override
@@ -104,6 +108,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
         sendUserInfo(builder); //Sync preferences
         setSIT(builder);          //Sync SIT Interval
         setCurrentDate(builder);  // Sync Current Date
+        setDayOfWeek(builder);
         setCurrentTime(builder);  // Sync Current Time
 
         requestDeviceInfo(builder);
@@ -131,7 +136,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
 
     private HPlusSupport syncPreferences(TransactionBuilder transaction) {
 
-        if(getDevice().getType() == DeviceType.HPLUS) {
+        if(deviceType == DeviceType.HPLUS) {
             byte gender = HPlusCoordinator.getUserGender(getDevice().getAddress());
             byte age = HPlusCoordinator.getUserAge(getDevice().getAddress());
             byte bodyHeight = HPlusCoordinator.getUserHeight(getDevice().getAddress());
@@ -178,7 +183,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
                     timemode
             });
 
-        }else if(getDevice().getType() == DeviceType.MAKIBESF68){
+        }else if(deviceType == DeviceType.MAKIBESF68){
             //Makibes doesn't support setting everything at once.
 
             setGender(transaction);
@@ -263,7 +268,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
 
         transaction.write(ctrlCharacteristic, new byte[]{
                 HPlusConstants.CMD_SET_WEEK,
-                (byte) c.get(Calendar.DAY_OF_WEEK)
+                (byte) (c.get(Calendar.DAY_OF_WEEK) - 1)
         });
         return this;
     }
@@ -273,7 +278,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
 
         //Makibes F68 doesn't like this command.
         //Just ignore.
-        if(getDevice().getType() == DeviceType.MAKIBESF68){
+        if(deviceType == DeviceType.MAKIBESF68){
             return this;
         }
 

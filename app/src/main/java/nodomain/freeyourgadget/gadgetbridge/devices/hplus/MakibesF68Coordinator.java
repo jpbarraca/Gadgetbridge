@@ -13,6 +13,12 @@ import android.os.Build;
 import android.os.ParcelUuid;
 import android.support.annotation.NonNull;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
+import java.util.Collections;
+
 import de.greenrobot.dao.query.QueryBuilder;
 import nodomain.freeyourgadget.gadgetbridge.GBApplication;
 import nodomain.freeyourgadget.gadgetbridge.GBException;
@@ -31,14 +37,8 @@ import nodomain.freeyourgadget.gadgetbridge.model.ActivityUser;
 import nodomain.freeyourgadget.gadgetbridge.model.DeviceType;
 import nodomain.freeyourgadget.gadgetbridge.util.Prefs;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
-import java.util.Collections;
-
-public class HPlusCoordinator extends AbstractDeviceCoordinator {
-    private static final Logger LOG = LoggerFactory.getLogger(HPlusCoordinator.class);
+public class MakibesF68Coordinator extends AbstractDeviceCoordinator {
+    private static final Logger LOG = LoggerFactory.getLogger(MakibesF68Coordinator.class);
     private static Prefs prefs  = GBApplication.getPrefs();
 
     @NonNull
@@ -54,8 +54,8 @@ public class HPlusCoordinator extends AbstractDeviceCoordinator {
     @Override
     public DeviceType getSupportedType(GBDeviceCandidate candidate) {
         String name = candidate.getDevice().getName();
-        if (name != null && name.startsWith("HPLUS")) {
-            return DeviceType.HPLUS;
+        if(name != null && name.startsWith("SPORT")){
+            return DeviceType.MAKIBESF68;
         }
 
         return DeviceType.UNKNOWN;
@@ -63,7 +63,7 @@ public class HPlusCoordinator extends AbstractDeviceCoordinator {
 
     @Override
     public DeviceType getDeviceType() {
-        return DeviceType.HPLUS;
+        return DeviceType.MAKIBESF68;
     }
 
     @Override
