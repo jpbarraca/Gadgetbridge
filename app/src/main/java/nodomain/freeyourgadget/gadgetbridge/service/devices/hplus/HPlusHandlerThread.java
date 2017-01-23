@@ -241,8 +241,9 @@ class HPlusHandlerThread extends GBDeviceIoThread {
 
         if(record.slot < 143){
             mDaySlotSamples.add(record);
+            LOG.debug("Buffering Day Slot data");
         }else {
-
+            LOG.debug("Saving Day Slot data");
             //Sort the samples
             Collections.sort(mDaySlotSamples, new Comparator<HPlusDataRecordDaySlot>() {
                 public int compare(HPlusDataRecordDaySlot one, HPlusDataRecordDaySlot other) {
@@ -305,7 +306,7 @@ class HPlusHandlerThread extends GBDeviceIoThread {
             LOG.debug((e.getMessage()));
             return false;
         }
-
+        LOG.debug("Sleep: "+record);
         mLastSleepDayReceived.setTimeInMillis(record.bedTimeStart * 1000L);
 
         try (DBHandler dbHandler = GBApplication.acquireDB()) {
@@ -359,6 +360,7 @@ class HPlusHandlerThread extends GBDeviceIoThread {
             LOG.debug((e.getMessage()));
             return false;
         }
+        LOG.debug("Realtime: "+record);
         //Skip duplicated messages as the device seems to send the same record multiple times
         //This can be used to detect the user is moving (not sleeping)
         if(prevRealTimeRecord != null && record.same(prevRealTimeRecord))
@@ -427,7 +429,7 @@ class HPlusHandlerThread extends GBDeviceIoThread {
             LOG.debug((e.getMessage()));
             return false;
         }
-
+        LOG.debug("Day Summary: "+record);
         try (DBHandler dbHandler = GBApplication.acquireDB()) {
             HPlusHealthSampleProvider provider = new HPlusHealthSampleProvider(getDevice(), dbHandler.getDaoSession());
 
@@ -475,6 +477,7 @@ class HPlusHandlerThread extends GBDeviceIoThread {
      * Issue a message requesting the next batch of sleep data
      */
     private void requestNextSleepData() {
+        LOG.debug("Requesting sleep data");
         TransactionBuilder builder = new TransactionBuilder("requestSleepStats");
         builder.write(mHPlusSupport.ctrlCharacteristic, new byte[]{HPlusConstants.CMD_GET_SLEEP});
         builder.queue(mHPlusSupport.getQueue());
@@ -491,6 +494,7 @@ class HPlusHandlerThread extends GBDeviceIoThread {
      * Messages will be provided every 10 minutes after they are available
      */
     private void requestNextDaySlots() {
+        LOG.debug("Requesting day slots");
 
         Calendar now = GregorianCalendar.getInstance();
         int currentSlot = now.get(Calendar.HOUR_OF_DAY) * 6 + now.get(Calendar.MINUTE) / 10;
@@ -536,6 +540,8 @@ class HPlusHandlerThread extends GBDeviceIoThread {
      * Request a batch of data with the summary of the previous days
      */
     public void requestDaySummaryData(){
+        LOG.debug("Requesting Day Summary Data");
+
         TransactionBuilder builder = new TransactionBuilder("startSyncDaySummary");
         builder.write(mHPlusSupport.ctrlCharacteristic, new byte[]{HPlusConstants.CMD_GET_DAY_DATA});
         builder.queue(mHPlusSupport.getQueue());
