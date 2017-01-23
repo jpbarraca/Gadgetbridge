@@ -217,6 +217,7 @@ class HPlusHandlerThread extends GBDeviceIoThread {
             LOG.debug((e.getMessage()));
             return false;
         }
+        LOG.debug("Slot: "+record);
 
         //Ignore real time messages as they are still not understood
         if(!mSlotsInitialSync){
@@ -276,6 +277,7 @@ class HPlusHandlerThread extends GBDeviceIoThread {
         }
         //Still fetching ring buffer. Request the next slots
         if (record.slot == mLastSlotRequested) {
+            LOG.debug("Slot: Reseting timer");
             mGetDaySlotsTime.clear();
             synchronized (waitObject) {
                 waitObject.notify();
