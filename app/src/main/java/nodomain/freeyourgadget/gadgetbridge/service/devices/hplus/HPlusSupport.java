@@ -677,8 +677,17 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
     }
 
 
-    private void showIncomingCall(String name, String number) {
+    private void showIncomingCall(String name, String rawNumber) {
         try {
+            StringBuilder number = new StringBuilder();
+
+            //Clean up number as the device only accepts digits
+            for(char c : rawNumber.toCharArray()){
+                if(Character.isDigit(c)){
+                    number.append(c);
+                }
+            }
+
             TransactionBuilder builder = performInitialized("incomingCall");
 
             //Enable call notifications
