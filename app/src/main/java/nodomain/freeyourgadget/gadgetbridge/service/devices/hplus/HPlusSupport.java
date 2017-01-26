@@ -28,7 +28,6 @@ import java.util.UUID;
 
 import nodomain.freeyourgadget.gadgetbridge.devices.hplus.HPlusConstants;
 import nodomain.freeyourgadget.gadgetbridge.devices.hplus.HPlusCoordinator;
-import nodomain.freeyourgadget.gadgetbridge.entities.Device;
 import nodomain.freeyourgadget.gadgetbridge.impl.GBDevice;
 import nodomain.freeyourgadget.gadgetbridge.model.Alarm;
 import nodomain.freeyourgadget.gadgetbridge.model.CalendarEventSpec;
@@ -114,6 +113,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
         setCurrentDate(builder);  // Sync Current Date
         setDayOfWeek(builder);
         setCurrentTime(builder);  // Sync Current Time
+        setLanguage(builder);
 
         requestDeviceInfo(builder);
 
@@ -147,7 +147,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
             byte bodyWeight = HPlusCoordinator.getUserWeight(getDevice().getAddress());
             int goal = HPlusCoordinator.getGoal(getDevice().getAddress());
             byte displayTime = HPlusCoordinator.getScreenTime(getDevice().getAddress());
-            byte country = HPlusCoordinator.getCountry(getDevice().getAddress());
+            byte country = HPlusCoordinator.getLanguage(getDevice().getAddress());
             byte social = HPlusCoordinator.getSocial(getDevice().getAddress()); // ??
             byte allDayHeart = HPlusCoordinator.getAllDayHR(getDevice().getAddress());
             byte wrist = HPlusCoordinator.getUserWrist(getDevice().getAddress());
@@ -209,7 +209,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
     }
 
     private HPlusSupport setLanguage(TransactionBuilder transaction) {
-        byte value = HPlusCoordinator.getCountry(getDevice().getAddress());
+        byte value = HPlusCoordinator.getLanguage(getDevice().getAddress());
         transaction.write(ctrlCharacteristic, new byte[]{
                 HPlusConstants.CMD_SET_LANGUAGE,
                 value
