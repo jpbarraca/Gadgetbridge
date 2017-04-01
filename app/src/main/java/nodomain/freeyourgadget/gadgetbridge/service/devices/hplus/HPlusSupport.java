@@ -786,27 +786,32 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
      */
     private byte[] encodeStringToDevice(String s){
 
-        List<Byte> outBytes = new ArrayList<Byte>();
+        byte[] cs = new byte[0];
 
-        for(int i = 0; i < s.length(); i++){
-                Character c = s.charAt(i);
-                byte[] cs;
+        for (int i = 0; i < s.length(); i++) {
+            Character c = s.charAt(i);
 
-                if(HPlusConstants.transliterateMap.containsKey(c)){
-                    cs = new byte[] {HPlusConstants.transliterateMap.get(c)};
-                }else {
-                    try {
+            if (HPlusConstants.transliterateMap.containsKey(c)) {
+                cs = new byte[]{HPlusConstants.transliterateMap.get(c)};
+            } else {
+                try {
+                    if (HPlusCoordinator.getLanguage(this.gbDevice.getAddress()) == HPlusConstants.ARG_LANGUAGE_CN)
                         cs = c.toString().getBytes("GB2312");
-                    } catch (UnsupportedEncodingException e) {
-                        //Fallback. Result string may be strange, but better than nothing
-                        cs = c.toString().getBytes();
-                    }
+                    else
+                        cs = c.toString().getBytes("Unicode");
+                } catch (UnsupportedEncodingException e) {
+                    //Fallback. Result string may be strange, but better than nothing
+                    cs = c.toString().getBytes();
                 }
-                for(int j = 0; j < cs.length; j++)
-                    outBytes.add(cs[j]);
+            }
         }
 
-        return ArrayUtils.toPrimitive(outBytes.toArray(new Byte[outBytes.size()]));
+        byte outBytes[] = new byte[cs.length];
+
+        for (int j = 0; j < cs.length; j++)
+            outBytes[j] = ((byte) Integer.parseInt(Integer.toHexString(cs[j] & 255), 16));
+
+        return outBytes;
     }
 
     @Override
