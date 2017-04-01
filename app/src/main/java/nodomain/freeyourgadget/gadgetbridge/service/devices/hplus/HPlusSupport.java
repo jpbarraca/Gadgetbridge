@@ -786,14 +786,15 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
      */
     private byte[] encodeStringToDevice(String s){
 
-        byte[] cs = new byte[0];
+        List<Byte> outBytes = new ArrayList<Byte>();
 
-        for (int i = 0; i < s.length(); i++) {
+        for(int i = 0; i < s.length(); i++){
             Character c = s.charAt(i);
+            byte[] cs;
 
-            if (HPlusConstants.transliterateMap.containsKey(c)) {
-                cs = new byte[]{HPlusConstants.transliterateMap.get(c)};
-            } else {
+            if(HPlusConstants.transliterateMap.containsKey(c)){
+                cs = new byte[] {HPlusConstants.transliterateMap.get(c)};
+            }else {
                 try {
                     if (HPlusCoordinator.getLanguage(this.gbDevice.getAddress()) == HPlusConstants.ARG_LANGUAGE_CN)
                         cs = c.toString().getBytes("GB2312");
@@ -804,14 +805,11 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
                     cs = c.toString().getBytes();
                 }
             }
+            for(int j = 0; j < cs.length; j++)
+                outBytes.add(((byte) Integer.parseInt(Integer.toHexString(cs[j] & 255), 16)));
         }
 
-        byte outBytes[] = new byte[cs.length];
-
-        for (int j = 0; j < cs.length; j++)
-            outBytes[j] = ((byte) Integer.parseInt(Integer.toHexString(cs[j] & 255), 16));
-
-        return outBytes;
+        return ArrayUtils.toPrimitive(outBytes.toArray(new Byte[outBytes.size()]));
     }
 
     @Override
