@@ -68,6 +68,7 @@ import nodomain.freeyourgadget.gadgetbridge.service.btle.AbstractBTLEDeviceSuppo
 import nodomain.freeyourgadget.gadgetbridge.service.btle.TransactionBuilder;
 import nodomain.freeyourgadget.gadgetbridge.service.btle.profiles.deviceinfo.DeviceInfo;
 import nodomain.freeyourgadget.gadgetbridge.service.btle.profiles.deviceinfo.DeviceInfoProfile;
+import nodomain.freeyourgadget.gadgetbridge.util.BatteryNormalize;
 import nodomain.freeyourgadget.gadgetbridge.util.DateTimeUtils;
 import nodomain.freeyourgadget.gadgetbridge.util.GB;
 import nodomain.freeyourgadget.gadgetbridge.util.StringUtils;
@@ -81,6 +82,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
     public BluetoothGattCharacteristic measureCharacteristic = null;
 
     private final GBDeviceEventBatteryInfo batteryCmd = new GBDeviceEventBatteryInfo();
+    private final BatteryNormalize bNormalize = new BatteryNormalize();
 
     private HPlusHandlerThread syncHelper;
     private DeviceType deviceType = DeviceType.UNKNOWN;
