@@ -904,7 +904,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
                 info += DEVINFO_CALORY + String.valueOf(record.calories) + "   ";
             }
             if (record.heartRate > 0 && record.heartRate != ActivityKind.TYPE_NOT_MEASURED) {
-                info += DEVINFO_HEART + String.valueOf(record.heartRate) + "   ";
+                info += "\n" + DEVINFO_HEART + String.valueOf(record.heartRate);
             }
 
             if (!info.equals("")) {
