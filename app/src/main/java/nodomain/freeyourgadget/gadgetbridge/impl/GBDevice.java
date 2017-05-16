@@ -450,7 +450,7 @@ public class GBDevice implements Parcelable {
             result.add(new GenericItem(DEVINFO_FW_VER, mFirmwareVersion));
         }
         if (mFirmwareVersion2 != null) {
-            result.add(new GenericItem(DEVINFO_HR_VER, mFirmwareVersion2));
+          //  result.add(new GenericItem(DEVINFO_HR_VER, mFirmwareVersion2));
         }
         if (mAddress != null) {
             result.add(new GenericItem(DEVINFO_ADDR, mAddress));
