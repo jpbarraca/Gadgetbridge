@@ -746,7 +746,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
 
             length = length > 5 ? 5 : length;
 
-            builder.write(ctrlCharacteristic, new byte[]{HPlusConstants.CMD_SET_INCOMING_MESSAGE, HPlusConstants.ARG_INCOMING_MESSAGE});
+           // builder.write(ctrlCharacteristic, new byte[]{HPlusConstants.CMD_SET_INCOMING_MESSAGE, HPlusConstants.ARG_INCOMING_MESSAGE});
 
             int remaining = Math.min(255, (messageBytes.length % 17 > 0) ? length + 1 : length);
 
