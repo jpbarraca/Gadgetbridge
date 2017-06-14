@@ -74,7 +74,6 @@ import nodomain.freeyourgadget.gadgetbridge.util.GB;
 import nodomain.freeyourgadget.gadgetbridge.util.StringUtils;
 
 
-
 public class HPlusSupport extends AbstractBTLEDeviceSupport {
     private static final Logger LOG = LoggerFactory.getLogger(HPlusSupport.class);
 
@@ -141,7 +140,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
         gbDevice.setState(GBDevice.State.INITIALIZED);
         gbDevice.sendDeviceUpdateIntent(getContext());
 
-        if(syncHelper == null) {
+        if (syncHelper == null) {
             syncHelper = new HPlusHandlerThread(getDevice(), getContext(), this);
             syncHelper.start();
         }
@@ -448,7 +447,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
             setCurrentDate(builder);
             setCurrentTime(builder);
             performConnected(builder.getTransaction());
-        }catch(IOException e){
+        } catch (IOException e) {
 
         }
     }
@@ -481,7 +480,8 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
             performConnected(builder.getTransaction());
 
             GB.toast(getContext(), getContext().getString(R.string.user_feedback_all_alarms_disabled), Toast.LENGTH_SHORT, GB.INFO);
-        }catch(Exception e){}
+        } catch (Exception e) {
+        }
 
 
     }
@@ -549,7 +549,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
     @Override
     public void onFetchActivityData() {
 
-        if (syncHelper == null){
+        if (syncHelper == null) {
             syncHelper = new HPlusHandlerThread(gbDevice, getContext(), this);
             syncHelper.start();
         }
@@ -565,7 +565,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
             TransactionBuilder builder = performInitialized("Shutdown");
             builder.write(ctrlCharacteristic, new byte[]{HPlusConstants.CMD_SHUTDOWN, HPlusConstants.ARG_SHUTDOWN_EN});
             performConnected(builder.getTransaction());
-        }catch(Exception e){
+        } catch (Exception e) {
 
         }
     }
@@ -573,12 +573,12 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
     @Override
     public void onHeartRateTest() {
         getQueue().clear();
-        try{
+        try {
             TransactionBuilder builder = performInitialized("HeartRateTest");
 
             builder.write(ctrlCharacteristic, new byte[]{HPlusConstants.CMD_SET_HEARTRATE_STATE, HPlusConstants.ARG_HEARTRATE_MEASURE_ON}); //Set Real Time... ?
             performConnected(builder.getTransaction());
-        }catch(Exception e){
+        } catch (Exception e) {
 
         }
     }
@@ -596,7 +596,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
 
             builder.write(ctrlCharacteristic, new byte[]{HPlusConstants.CMD_SET_ALLDAY_HRM, state});
             performConnected(builder.getTransaction());
-        }catch(Exception e){
+        } catch (Exception e) {
 
         }
     }
@@ -669,10 +669,80 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
 
     }
 
-    public void setUnicodeSupport(boolean support){
+    public void setUnicodeSupport(boolean support) {
         HPlusCoordinator.setUnicodeSupport(gbDevice.getAddress(), support);
     }
 
+    private void showIncomingCall_sendName(String name,TransactionBuilder builder) {
+        if (name != null) {
+            byte[] msg = new byte[13];
+
+            //Show call name
+            for (int i = 0; i < msg.length; i++)
+                msg[i] = ' ';
+
+            byte[] nameBytes = encodeStringToDevice(name, HPlusConstants.CMD_ACTION_INCOMING_CALL);
+            for (int i = 0; i < nameBytes.length && i < (msg.length - 1); i++)
+                msg[i + 1] = nameBytes[i];
+
+
+            msg[0] = HPlusConstants.CMD_ACTION_DISPLAY_TEXT_NAME;
+            builder.write(ctrlCharacteristic, msg);
+
+            msg[0] = HPlusConstants.CMD_ACTION_DISPLAY_TEXT_NAME_CN;
+            builder.write(ctrlCharacteristic, msg);
+        }else if (this.getDevice().getType() == DeviceType.MAKIBESF68){
+            byte[] msg = new byte[13];
+
+            //Show call name
+            for (int i = 0; i < msg.length; i++)
+                msg[i] = ' ';
+
+            msg[0] = HPlusConstants.CMD_ACTION_DISPLAY_TEXT_NAME;
+            builder.write(ctrlCharacteristic, msg);
+
+            msg[0] = HPlusConstants.CMD_ACTION_DISPLAY_TEXT_NAME_CN;
+            builder.write(ctrlCharacteristic, msg);
+        }
+    }
+
+    private void showIncomingCall_sendNumber(String rawNumber,TransactionBuilder builder) {
+        if (rawNumber != null) {
+            StringBuilder number = new StringBuilder();
+
+            //Clean up number as the device only accepts digits
+            for (char c : rawNumber.toCharArray()) {
+                if (Character.isDigit(c)) {
+                    number.append(c);
+                }
+            }
+
+            byte[] msg = new byte[13];
+
+            //Show call number
+            for (int i = 0; i < msg.length; i++)
+                msg[i] = ' ';
+
+            for (int i = 0; i < number.length() && i < (msg.length - 1); i++)
+                msg[i + 1] = (byte) number.charAt(i);
+
+            msg[0] = HPlusConstants.CMD_SET_INCOMING_CALL_NUMBER;
+
+            builder.wait(200);
+            builder.write(ctrlCharacteristic, msg);
+        }else if (this.getDevice().getType() == DeviceType.MAKIBESF68){
+            byte[] msg = new byte[13];
+
+            //Show call number
+            for (int i = 0; i < msg.length; i++)
+                msg[i] = ' ';
+
+            msg[0] = HPlusConstants.CMD_SET_INCOMING_CALL_NUMBER;
+
+           // builder.wait(200);
+            builder.write(ctrlCharacteristic, msg);
+        }
+    }
 
     private void showIncomingCall(String name, String rawNumber) {
         try {
@@ -683,50 +753,17 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
             builder.write(ctrlCharacteristic, new byte[]{HPlusConstants.CMD_ACTION_INCOMING_CALL, 1});
 
             //Show Call Icon
-            builder.write(ctrlCharacteristic, new byte[]{HPlusConstants.CMD_SET_INCOMING_CALL, HPlusConstants.ARG_INCOMING_CALL});
+            // builder.write(ctrlCharacteristic, new byte[]{HPlusConstants.CMD_SET_INCOMING_CALL, HPlusConstants.ARG_INCOMING_CALL});
 
-            if(name != null) {
-                byte[] msg = new byte[13];
-
-                //Show call name
-                for (int i = 0; i < msg.length; i++)
-                    msg[i] = ' ';
-
-                byte[] nameBytes = encodeStringToDevice(name);
-                for (int i = 0; i < nameBytes.length && i < (msg.length - 1); i++)
-                    msg[i + 1] = nameBytes[i];
-
-                msg[0] = HPlusConstants.CMD_ACTION_DISPLAY_TEXT_NAME;
-                builder.write(ctrlCharacteristic, msg);
-
-                msg[0] = HPlusConstants.CMD_ACTION_DISPLAY_TEXT_NAME_CN;
-                builder.write(ctrlCharacteristic, msg);
+            if (this.getDevice().getType() == DeviceType.MAKIBESF68) {
+                //ATTENTION,  MAKIBESF68 RESET DISPLAY ONLY WHEN SEND THE NUMBER,IF SEND FIRST NAME THE DISPLAY RETURN OLD NUMBER
+                showIncomingCall_sendNumber(rawNumber,builder);
+                showIncomingCall_sendName(name,builder);
+            } else if (this.getDevice().getType() == DeviceType.HPLUS) {
+                showIncomingCall_sendName(name,builder);
+                showIncomingCall_sendNumber(rawNumber,builder);
             }
 
-            if(rawNumber != null) {
-                StringBuilder number = new StringBuilder();
-
-                //Clean up number as the device only accepts digits
-                for (char c : rawNumber.toCharArray()) {
-                    if (Character.isDigit(c)) {
-                        number.append(c);
-                    }
-                }
-
-                byte[] msg = new byte[13];
-
-                //Show call number
-                for (int i = 0; i < msg.length; i++)
-                    msg[i] = ' ';
-
-                for (int i = 0; i < number.length() && i < (msg.length - 1); i++)
-                    msg[i + 1] = (byte) number.charAt(i);
-
-                msg[0] = HPlusConstants.CMD_SET_INCOMING_CALL_NUMBER;
-
-                builder.wait(200);
-                builder.write(ctrlCharacteristic, msg);
-            }
 
             performConnected(builder.getTransaction());
         } catch (IOException e) {
@@ -749,13 +786,13 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
                 message += body;
             }
 
-            byte[] messageBytes = encodeStringToDevice(message);
+            byte[] messageBytes = encodeStringToDevice(message, HPlusConstants.CMD_ACTION_DISPLAY_TEXT);
 
             int length = messageBytes.length / 17;
 
             length = length > 5 ? 5 : length;
 
-           // builder.write(ctrlCharacteristic, new byte[]{HPlusConstants.CMD_SET_INCOMING_MESSAGE, HPlusConstants.ARG_INCOMING_MESSAGE});
+            // builder.write(ctrlCharacteristic, new byte[]{HPlusConstants.CMD_SET_INCOMING_MESSAGE, HPlusConstants.ARG_INCOMING_MESSAGE});
 
             int remaining = Math.min(255, (messageBytes.length % 17 > 0) ? length + 1 : length);
 
@@ -814,8 +851,8 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
      * @param s The String to transliterate
      * @return An array of bytes ready to be sent to the device
      */
-    private byte[] encodeStringToDevice(String s) {
-
+    private byte[] encodeStringToDevice(String s, byte cmd) {
+        String encoding = "";
         List<Byte> outBytes = new ArrayList<Byte>();
 
         for (int i = 0; i < s.length(); i++) {
@@ -826,16 +863,33 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
                 cs = HPlusConstants.transliterateMap.get(c);
             } else {
                 try {
-                    if(HPlusCoordinator.getUnicodeSupport(this.gbDevice.getAddress()))
-                        cs = c.toString().getBytes("Unicode");
-                    else
-                        cs = c.toString().getBytes("GB2312");
+                    if (HPlusCoordinator.getUnicodeSupport(this.gbDevice.getAddress())) {
+                        switch (cmd) {
+
+                            case HPlusConstants.CMD_ACTION_INCOMING_CALL:
+                                encoding = "GB2312";
+                                break;
+                            case HPlusConstants.CMD_ACTION_DISPLAY_TEXT:
+                            default:
+                                encoding = "Unicode";
+                                break;
+                        }
+                        cs = c.toString().getBytes(encoding);
+                    } else {
+                        encoding = "GB2312";
+                        cs = c.toString().getBytes(encoding);
+                    }
                 } catch (UnsupportedEncodingException e) {
                     //Fallback. Result string may be strange, but better than nothing
                     cs = c.toString().getBytes();
                 }
             }
-            for (int j = 0; j < cs.length; j++)
+
+            int star_byte = 0;
+            if (encoding == "Unicode" && !outBytes.isEmpty()) {
+                star_byte = 2;
+            }
+            for (int j = star_byte; j < cs.length; j++)
                 outBytes.add(cs[j]);
         }
 
@@ -862,7 +916,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
             case HPlusConstants.DATA_STATS:
                 boolean result = syncHelper.processRealtimeStats(data, HPlusCoordinator.getUserAge());
                 if (result) {
-                    processExtraInfo (data);
+                    processExtraInfo(data);
                 }
                 return result;
 
@@ -884,7 +938,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
         }
     }
 
-    private void  processExtraInfo (byte[] data) {
+    private void processExtraInfo(byte[] data) {
         try {
             HPlusDataRecordRealtime record = new HPlusDataRecordRealtime(data, HPlusCoordinator.getUserAge());
 
@@ -925,7 +979,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
             batteryCmd.state = BatteryState.BATTERY_NORMAL;
             batteryCmd.numCharges = 0;
         }
-        short level = bNormalize.getLevelNormalize((int) data,batteryCmd);
+        short level = bNormalize.getLevelNormalize((int) data, batteryCmd);
 
         LOG.debug("Count:" + String.valueOf(bNormalize.getCounter()) +
                 " Mid:" + String.valueOf((int) level) +
