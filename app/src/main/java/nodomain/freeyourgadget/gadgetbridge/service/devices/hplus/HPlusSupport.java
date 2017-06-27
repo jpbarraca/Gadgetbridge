@@ -673,7 +673,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
         HPlusCoordinator.setUnicodeSupport(gbDevice.getAddress(), support);
     }
 
-    private void showIncomingCall_sendName(String name,TransactionBuilder builder) {
+    private void showIncomingCall_sendName(String name, TransactionBuilder builder) {
         if (name != null) {
             byte[] msg = new byte[13];
 
@@ -691,7 +691,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
 
             msg[0] = HPlusConstants.CMD_ACTION_DISPLAY_TEXT_NAME_CN;
             builder.write(ctrlCharacteristic, msg);
-        }else if (this.getDevice().getType() == DeviceType.MAKIBESF68){
+        } else if (this.getDevice().getType() == DeviceType.MAKIBESF68) {
             byte[] msg = new byte[13];
 
             //Show call name
@@ -706,7 +706,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
         }
     }
 
-    private void showIncomingCall_sendNumber(String rawNumber,TransactionBuilder builder) {
+    private void showIncomingCall_sendNumber(String rawNumber, TransactionBuilder builder) {
         if (rawNumber != null) {
             StringBuilder number = new StringBuilder();
 
@@ -730,7 +730,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
 
             builder.wait(200);
             builder.write(ctrlCharacteristic, msg);
-        }else if (this.getDevice().getType() == DeviceType.MAKIBESF68){
+        } else if (this.getDevice().getType() == DeviceType.MAKIBESF68) {
             byte[] msg = new byte[13];
 
             //Show call number
@@ -739,7 +739,7 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
 
             msg[0] = HPlusConstants.CMD_SET_INCOMING_CALL_NUMBER;
 
-           // builder.wait(200);
+            // builder.wait(200);
             builder.write(ctrlCharacteristic, msg);
         }
     }
@@ -757,11 +757,11 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
 
             if (this.getDevice().getType() == DeviceType.MAKIBESF68) {
                 //ATTENTION,  MAKIBESF68 RESET DISPLAY ONLY WHEN SEND THE NUMBER,IF SEND FIRST NAME THE DISPLAY RETURN OLD NUMBER
-                showIncomingCall_sendNumber(rawNumber,builder);
-                showIncomingCall_sendName(name,builder);
+                showIncomingCall_sendNumber(rawNumber, builder);
+                showIncomingCall_sendName(name, builder);
             } else if (this.getDevice().getType() == DeviceType.HPLUS) {
-                showIncomingCall_sendName(name,builder);
-                showIncomingCall_sendNumber(rawNumber,builder);
+                showIncomingCall_sendName(name, builder);
+                showIncomingCall_sendNumber(rawNumber, builder);
             }
 
 
@@ -775,17 +775,28 @@ public class HPlusSupport extends AbstractBTLEDeviceSupport {
     private void showText(String title, String body) {
         try {
             TransactionBuilder builder = performInitialized("notification");
-
             String message = "";
 
             if (title != null && title.length() > 0) {
-                message = StringUtils.pad(StringUtils.truncate(title, 16), 16); //Limit title to top row
+                if (getDevice().getType() == DeviceType.MAKIBESF68) {
+                    message = StringUtils.truncate(title, 9) + ":"; //Limit title to top row
+                    for (int i = message.length(); i < 10; i++)
+                        message += ' ';
+                }
+                if (getDevice().getType() == DeviceType.HPLUS) {
+                    message = StringUtils.pad(StringUtils.truncate(title, 16), 16); //Limit title to top row
+                }
+
             }
 
             if (body != null) {
-                message += body;
+                if (getDevice().getType() == DeviceType.MAKIBESF68) {
+                    message += StringUtils.truncate(body, 49 - message.length());
+                }
+                if (getDevice().getType() == DeviceType.HPLUS) {
+                    message += body;
+                }
             }
-
             byte[] messageBytes = encodeStringToDevice(message, HPlusConstants.CMD_ACTION_DISPLAY_TEXT);
 
             int length = messageBytes.length / 17;
